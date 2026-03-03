@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
@@ -22,6 +23,7 @@ from eds_researcher.collectors.openfda import OpenFDACollector
 from eds_researcher.collectors.pubchem import PubChemCollector
 from eds_researcher.collectors.pubmed import PubMedCollector
 from eds_researcher.collectors.reddit import RedditCollector
+from eds_researcher.collectors.reddit_public import RedditPublicCollector
 from eds_researcher.collectors.scholar import ScholarCollector
 from eds_researcher.collectors.xai_search import XAISearchCollector
 from eds_researcher.memory.database import Database
@@ -85,10 +87,21 @@ class Pipeline:
 
         if sources.get("reddit", {}).get("enabled", True):
             reddit_cfg = sources["reddit"]
-            collectors["reddit"] = RedditCollector(
-                subreddits=reddit_cfg.get("subreddits"),
-                time_filter=reddit_cfg.get("time_filter", "month"),
+            # Use PRAW if API credentials exist, otherwise fall back to public JSON API
+            has_reddit_key = bool(
+                os.getenv("REDDIT_CLIENT_ID") or reddit_cfg.get("client_id")
             )
+            if has_reddit_key:
+                collectors["reddit"] = RedditCollector(
+                    subreddits=reddit_cfg.get("subreddits"),
+                    time_filter=reddit_cfg.get("time_filter", "month"),
+                )
+            else:
+                logger.info("No Reddit API key — using public JSON API (no auth needed)")
+                collectors["reddit"] = RedditPublicCollector(
+                    subreddits=reddit_cfg.get("subreddits"),
+                    time_filter=reddit_cfg.get("time_filter", "month"),
+                )
 
         if sources.get("xai_search", {}).get("enabled", True):
             collectors["xai_search"] = XAISearchCollector(

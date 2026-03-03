@@ -6,6 +6,7 @@ from .openfda import OpenFDACollector
 from .pubchem import PubChemCollector
 from .pubmed import PubMedCollector
 from .reddit import RedditCollector
+from .reddit_public import RedditPublicCollector
 from .scholar import ScholarCollector
 from .xai_search import XAISearchCollector
 
@@ -16,6 +17,7 @@ __all__ = [
     "PubChemCollector",
     "PubMedCollector",
     "RedditCollector",
+    "RedditPublicCollector",
     "ScholarCollector",
     "XAISearchCollector",
 ]
