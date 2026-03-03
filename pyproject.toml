@@ -16,6 +16,8 @@ dependencies = [
     "requests>=2.31",
     "python-dotenv>=1.0",
     "tenacity>=8.2",
+    "markdown>=3.5",
+    "xhtml2pdf>=0.2.16",
 ]
 
 [project.scripts]

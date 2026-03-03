@@ -95,4 +95,12 @@ def generate_delta_report(
     output_path = output_dir / f"delta_report_{date.today().isoformat()}.md"
     output_path.write_text(rendered)
     logger.info(f"Delta report written to {output_path}")
+
+    # Generate PDF alongside markdown
+    from eds_researcher.reporter.pdf_export import markdown_to_pdf
+    try:
+        markdown_to_pdf(output_path)
+    except Exception:
+        logger.warning("PDF generation failed — markdown report still available", exc_info=True)
+
     return output_path

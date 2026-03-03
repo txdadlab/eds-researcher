@@ -59,8 +59,10 @@ def run(ctx):
         # Auto-generate reports
         click.echo("\nGenerating reports...")
         full_path, delta_path = pipeline.generate_reports()
-        click.echo(f"  Full report: {full_path}")
+        click.echo(f"  Full report:  {full_path}")
+        click.echo(f"  Full PDF:     {full_path.with_suffix('.pdf')}")
         click.echo(f"  Delta report: {delta_path}")
+        click.echo(f"  Delta PDF:    {delta_path.with_suffix('.pdf')}")
     finally:
         pipeline.close()
 
@@ -84,6 +86,7 @@ def report_full(ctx):
         output_dir = config.get("reports", {}).get("output_dir", "data/reports")
         path = generate_full_report(db, output_dir)
         click.echo(f"Full report generated: {path}")
+        click.echo(f"Full PDF generated:    {path.with_suffix('.pdf')}")
     finally:
         db.close()
 
@@ -103,6 +106,7 @@ def report_delta(ctx, days):
         since = date.today() - timedelta(days=days)
         path = generate_delta_report(db, output_dir, since=since)
         click.echo(f"Delta report generated: {path}")
+        click.echo(f"Delta PDF generated:    {path.with_suffix('.pdf')}")
     finally:
         db.close()
 
