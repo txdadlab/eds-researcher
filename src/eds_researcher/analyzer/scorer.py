@@ -10,6 +10,8 @@ SOURCE_TIER_MAP: dict[str, EvidenceTier] = {
     "pubmed": EvidenceTier.PEER_REVIEWED,
     "clinical_trials": EvidenceTier.CLINICAL_EMERGING,
     "scholar": EvidenceTier.PEER_REVIEWED,
+    "pubchem": EvidenceTier.CLINICAL_EMERGING,
+    "openfda": EvidenceTier.CLINICAL_EMERGING,
     "xai_search": EvidenceTier.ANECDOTAL_SINGLE,
     "reddit": EvidenceTier.ANECDOTAL_SINGLE,
 }

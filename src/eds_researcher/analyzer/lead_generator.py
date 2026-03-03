@@ -89,8 +89,9 @@ class LeadGenerator:
         return leads
 
     def _fallback_leads(self) -> list[SearchLead]:
-        """Default leads if Grok fails — cover the basics."""
+        """Default leads if Grok fails — cover the basics plus pharmacology."""
         base_queries = [
+            # Core EDS research
             ("Ehlers-Danlos syndrome pain management treatment", "pubmed", 1),
             ("EDS hypermobility joint pain medication", "pubmed", 2),
             ("hEDS neuropathy treatment", "pubmed", 2),
@@ -101,6 +102,23 @@ class LeadGenerator:
             ("hypermobile EDS pain management systematic review", "scholar", 3),
             ("EDS pain treatment autism comorbidity", "xai_search", 4),
             ("low dose naltrexone EDS", "pubmed", 3),
+            # Pharmacological / drug repurposing
+            ("naltrexone", "openfda", 3),
+            ("palmitoylethanolamide chronic pain", "pubmed", 3),
+            ("palmitoylethanolamide", "pubchem", 4),
+            ("BPC-157 peptide connective tissue", "pubmed", 3),
+            ("BPC-157", "pubchem", 4),
+            ("TB-500 thymosin beta-4 healing", "pubmed", 4),
+            ("collagen peptides joint pain", "pubmed", 3),
+            ("magnesium glycinate neuropathy", "pubchem", 4),
+            ("quercetin mast cell EDS", "pubmed", 3),
+            ("low dose naltrexone mechanism", "openfda", 3),
+            ("pregabalin neuropathy", "openfda", 4),
+            ("duloxetine pain mechanism", "openfda", 4),
+            ("N-acetyl cysteine neuroinflammation", "pubmed", 4),
+            ("curcumin anti-inflammatory bioavailability", "pubchem", 5),
+            ("KPV peptide anti-inflammatory", "pubmed", 5),
+            ("connective tissue disorder pharmacotherapy", "pubmed", 3),
         ]
         return [
             SearchLead(query_text=q, source_target=s, priority=p, origin="fallback_defaults")

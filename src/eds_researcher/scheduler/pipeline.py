@@ -18,6 +18,8 @@ from eds_researcher.analyzer.scorer import (
 )
 from eds_researcher.collectors.base import Collector
 from eds_researcher.collectors.clinical_trials import ClinicalTrialsCollector
+from eds_researcher.collectors.openfda import OpenFDACollector
+from eds_researcher.collectors.pubchem import PubChemCollector
 from eds_researcher.collectors.pubmed import PubMedCollector
 from eds_researcher.collectors.reddit import RedditCollector
 from eds_researcher.collectors.scholar import ScholarCollector
@@ -75,8 +77,10 @@ class Pipeline:
         collectors = {}
 
         if sources.get("pubmed", {}).get("enabled", True):
+            pubmed_cfg = sources["pubmed"]
             collectors["pubmed"] = PubMedCollector(
-                email=sources["pubmed"].get("email", ""),
+                email=pubmed_cfg.get("email", ""),
+                databases=pubmed_cfg.get("databases", ["pubmed", "pmc"]),
             )
 
         if sources.get("reddit", {}).get("enabled", True):
@@ -98,6 +102,12 @@ class Pipeline:
             collectors["scholar"] = ScholarCollector(
                 use_proxy=sources.get("scholar", {}).get("use_proxy", False),
             )
+
+        if sources.get("pubchem", {}).get("enabled", True):
+            collectors["pubchem"] = PubChemCollector()
+
+        if sources.get("openfda", {}).get("enabled", True):
+            collectors["openfda"] = OpenFDACollector()
 
         return collectors
 
