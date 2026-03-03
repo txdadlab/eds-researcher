@@ -1,0 +1,104 @@
+# EDS Research — Weekly Delta Report
+
+**Generated:** {{ generated_date }}
+**Period:** {{ since_date }} to {{ generated_date }}
+
+---
+
+## New Treatments Discovered
+
+{% if new_treatments %}
+{% for t in new_treatments %}
+### {{ t.name }}{% if t.trending %} 🔥{% endif %}
+
+- **Category:** {{ t.category }}
+- **Evidence Tier:** T{{ t.evidence_tier }} — {{ tier_labels[t.evidence_tier] }}
+{% if t.description %}- **Description:** {{ t.description }}{% endif %}
+{% if t.mechanism_of_action %}- **Mechanism:** {{ t.mechanism_of_action }}{% endif %}
+
+{% set t_evidence = new_evidence_by_treatment.get(t.id, []) %}
+{% if t_evidence %}
+**New Evidence:**
+{% for e in t_evidence %}
+- [T{{ e.evidence_tier }}] {{ e.source_type | upper }}: {{ e.summary }}
+  {% if e.source_url %}[Source]({{ e.source_url }}){% endif %}
+
+{% endfor %}
+{% endif %}
+
+{% endfor %}
+{% else %}
+_No new treatments discovered this period._
+{% endif %}
+
+---
+
+## Updated Treatments
+
+{% if updated_treatments %}
+{% for t in updated_treatments %}
+### {{ t.name }}
+
+- **Current Tier:** T{{ t.evidence_tier }}
+- **Updated:** {{ t.last_updated }}
+
+{% set t_evidence = new_evidence_by_treatment.get(t.id, []) %}
+{% if t_evidence %}
+**New evidence added:**
+{% for e in t_evidence %}
+- [T{{ e.evidence_tier }}] {{ e.source_type | upper }}: {{ e.summary }}
+  {% if e.source_url %}[Source]({{ e.source_url }}){% endif %}
+
+{% endfor %}
+{% endif %}
+
+{% endfor %}
+{% else %}
+_No treatment updates this period._
+{% endif %}
+
+---
+
+## New Evidence Records
+
+{% if new_evidence %}
+| Treatment | Source | Tier | Supports | Summary |
+|-----------|--------|------|----------|---------|
+{% for e in new_evidence %}
+| {{ treatment_names.get(e.treatment_id, "Unknown") }} | {{ e.source_type }} | T{{ e.evidence_tier }} | {{ e.supports_treatment }} | {{ e.summary[:80] }}... |
+{% endfor %}
+{% else %}
+_No new evidence this period._
+{% endif %}
+
+---
+
+## New Research Leads
+
+{% if new_leads %}
+| Priority | Query | Target | Rationale |
+|----------|-------|--------|-----------|
+{% for lead in new_leads %}
+| {{ lead.priority }} | {{ lead.query_text }} | {{ lead.source_target }} | {{ lead.origin[:60] }} |
+{% endfor %}
+{% else %}
+_No new leads generated._
+{% endif %}
+
+---
+
+## Search Effectiveness
+
+{% if search_stats %}
+| Source | Queries Run | Total Results | Useful Results | Hit Rate |
+|--------|-------------|---------------|----------------|----------|
+{% for source, stats in search_stats.items() %}
+| {{ source }} | {{ stats.queries }} | {{ stats.total }} | {{ stats.useful }} | {{ "%.0f" | format(stats.hit_rate * 100) }}% |
+{% endfor %}
+{% else %}
+_No search statistics for this period._
+{% endif %}
+
+---
+
+_This report is for informational purposes and discussion with medical providers. It is not medical advice._

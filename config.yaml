@@ -1,0 +1,88 @@
+# EDS Researcher Configuration
+
+# Symptom priorities — controls report ordering and search emphasis
+symptoms:
+  - name: knee_pain
+    body_region: joint
+    severity: high
+  - name: hip_pain
+    body_region: joint
+    severity: high
+  - name: shoulder_pain
+    body_region: joint
+    severity: high
+  - name: neuropathy
+    body_region: neurological
+    severity: high
+  - name: muscle_pain
+    body_region: muscular
+    severity: medium
+  - name: brain_fog
+    body_region: cognitive
+    severity: high
+
+# Search configuration
+search:
+  # Max results per source per query
+  max_results_per_source: 20
+  # Base search terms combined with symptom-specific terms
+  base_terms:
+    - "Ehlers-Danlos syndrome"
+    - "EDS hypermobility"
+    - "hypermobile EDS"
+  # Treatment categories to search for
+  categories:
+    - medication
+    - supplement
+    - exercise
+    - therapy
+    - other
+
+# Source-specific settings
+sources:
+  pubmed:
+    enabled: true
+    email: "your-email@example.com"  # Required by NCBI
+    max_results: 20
+  reddit:
+    enabled: true
+    subreddits:
+      - ehlersdanlos
+      - eds
+      - ChronicPain
+      - autism
+      - Nootropics
+    max_results: 25
+    time_filter: month  # hour, day, week, month, year, all
+  xai_search:
+    enabled: true
+    max_results: 20
+  clinical_trials:
+    enabled: true
+    max_results: 15
+  scholar:
+    enabled: true
+    max_results: 10
+    # Scholar aggressively blocks scrapers — set to false if getting blocked
+    use_proxy: false
+
+# Grok AI settings
+grok:
+  # Model for initial screening/extraction (faster, cheaper)
+  screening_model: "grok-3-mini-fast"
+  # Model for deep analysis (more capable)
+  analysis_model: "grok-3-mini"
+  base_url: "https://api.x.ai/v1"
+  max_tokens: 4096
+  temperature: 0.3
+
+# Report settings
+reports:
+  output_dir: "data/reports"
+  # Include treatments at or above this tier in the summary section
+  summary_min_tier: 3
+
+# Database
+database:
+  path: "data/eds_research.db"
+  chromadb_path: "data/chromadb"

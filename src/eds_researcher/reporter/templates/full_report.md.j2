@@ -1,0 +1,99 @@
+# EDS Pain Management — Full Treatment Compendium
+
+**Generated:** {{ generated_date }}
+**Total treatments tracked:** {{ treatments | length }}
+**Evidence records:** {{ total_evidence }}
+
+---
+
+## Summary
+
+{% for tier_num, tier_label in tiers %}
+### {{ tier_label }} (Tier {{ tier_num }})
+{% set tier_treatments = treatments | selectattr("evidence_tier", "equalto", tier_num) | list %}
+{% if tier_treatments %}
+{% for t in tier_treatments %}
+- **{{ t.name }}** ({{ t.category }}){% if t.trending %} 🔥 TRENDING{% endif %}
+
+{% endfor %}
+{% else %}
+_No treatments at this tier yet._
+{% endif %}
+{% endfor %}
+
+---
+
+## Treatments by Symptom
+
+{% for symptom in symptoms %}
+### {{ symptom.name | replace("_", " ") | title }} ({{ symptom.body_region }}) — Priority: {{ symptom.severity_relevance | upper }}
+
+{% set sym_treatments = symptom_treatments.get(symptom.name, []) %}
+{% if sym_treatments %}
+| Treatment | Category | Tier | Effectiveness | Trending |
+|-----------|----------|------|---------------|----------|
+{% for t, score in sym_treatments %}
+| {{ t.name }} | {{ t.category }} | T{{ t.evidence_tier }} | {{ "%.0f" | format(score * 100) }}% | {{ "Yes" if t.trending else "" }} |
+{% endfor %}
+{% else %}
+_No treatments linked to this symptom yet._
+{% endif %}
+
+{% endfor %}
+
+---
+
+## Detailed Treatment Profiles
+
+{% for t in treatments %}
+### {{ t.name }}{% if t.trending %} 🔥{% endif %}
+
+- **Category:** {{ t.category }}
+- **Evidence Tier:** T{{ t.evidence_tier }} — {{ tier_labels[t.evidence_tier] }}
+- **First Seen:** {{ t.first_seen }}
+- **Last Updated:** {{ t.last_updated }}
+{% if t.description %}- **Description:** {{ t.description }}{% endif %}
+{% if t.mechanism_of_action %}- **Mechanism:** {{ t.mechanism_of_action }}{% endif %}
+{% if t.legality %}- **Legality:** {{ t.legality }}{% endif %}
+{% if t.cost_estimate %}- **Cost Estimate:** {{ t.cost_estimate }}{% endif %}
+
+{% set t_evidence = evidence_by_treatment.get(t.id, []) %}
+{% if t_evidence %}
+**Evidence ({{ t_evidence | length }} records):**
+
+{% for e in t_evidence %}
+- **[T{{ e.evidence_tier }}] {{ e.source_type | upper }}** ({{ e.retrieval_date }}) — {{ "✅" if e.supports_treatment == "true" else "❌" if e.supports_treatment == "false" else "⚖️" }} {{ e.supports_treatment }}
+  {{ e.summary }}
+  {% if e.source_url %}[Source]({{ e.source_url }}){% endif %}
+
+{% endfor %}
+{% endif %}
+
+{% set t_providers = providers_by_treatment.get(t.id, []) %}
+{% if t_providers %}
+**Providers:**
+{% for p in t_providers %}
+- {{ p.name }}{% if p.credentials %} ({{ p.credentials }}){% endif %}{% if p.specialty %} — {{ p.specialty }}{% endif %}{% if p.location %} — {{ p.location }}{% endif %}
+
+{% endfor %}
+{% endif %}
+
+---
+
+{% endfor %}
+
+## Pending Research Leads
+
+{% if pending_leads %}
+| Priority | Query | Target Source | Origin |
+|----------|-------|---------------|--------|
+{% for lead in pending_leads %}
+| {{ lead.priority }} | {{ lead.query_text }} | {{ lead.source_target }} | {{ lead.origin[:50] }} |
+{% endfor %}
+{% else %}
+_No pending leads._
+{% endif %}
+
+---
+
+_This report is for informational purposes and discussion with medical providers. It is not medical advice._
