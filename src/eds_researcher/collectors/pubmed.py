@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 from datetime import date
 
 from Bio import Entrez
@@ -32,7 +33,10 @@ NCBI_DATABASES = {
 
 
 class PubMedCollector(Collector):
-    """Searches PubMed, PMC, and NCBI Books via Entrez API."""
+    """Searches PubMed, PMC, and NCBI Books via Entrez API.
+
+    NCBI rate limit: 10 requests/second with API key, 3/second without.
+    """
 
     source_type = "pubmed"
 
@@ -47,6 +51,16 @@ class PubMedCollector(Collector):
         if key:
             Entrez.api_key = key
         self.databases = databases or ["pubmed", "pmc"]
+        # Rate limiting: 10 req/s with key, 3 req/s without
+        self._min_interval = 0.1 if key else 0.34
+        self._last_request = 0.0
+
+    def _throttle(self) -> None:
+        """Enforce NCBI rate limit between requests."""
+        elapsed = time.monotonic() - self._last_request
+        if elapsed < self._min_interval:
+            time.sleep(self._min_interval - elapsed)
+        self._last_request = time.monotonic()
 
     def search(self, query: str, max_results: int = 20) -> list[RawFinding]:
         findings = []
@@ -69,6 +83,7 @@ class PubMedCollector(Collector):
     # ── PubMed ──────────────────────────────────────────────
 
     def _search_pubmed(self, query: str, max_results: int) -> list[RawFinding]:
+        self._throttle()
         handle = Entrez.esearch(db="pubmed", term=query, retmax=max_results, sort="relevance")
         record = Entrez.read(handle)
         handle.close()
@@ -77,6 +92,7 @@ class PubMedCollector(Collector):
         if not id_list:
             return []
 
+        self._throttle()
         handle = Entrez.efetch(db="pubmed", id=id_list, rettype="xml", retmode="xml")
         articles = Entrez.read(handle)
         handle.close()
@@ -124,6 +140,7 @@ class PubMedCollector(Collector):
     # ── PMC (full-text) ────────────────────────────────────
 
     def _search_pmc(self, query: str, max_results: int) -> list[RawFinding]:
+        self._throttle()
         handle = Entrez.esearch(db="pmc", term=query, retmax=max_results, sort="relevance")
         record = Entrez.read(handle)
         handle.close()
@@ -133,6 +150,7 @@ class PubMedCollector(Collector):
             return []
 
         # Fetch summaries (full XML is huge, summaries are more practical)
+        self._throttle()
         handle = Entrez.esummary(db="pmc", id=",".join(id_list))
         summaries = Entrez.read(handle)
         handle.close()
@@ -186,6 +204,7 @@ class PubMedCollector(Collector):
     # ── Books (GeneReviews, NCBI Bookshelf) ────────────────
 
     def _search_books(self, query: str, max_results: int) -> list[RawFinding]:
+        self._throttle()
         handle = Entrez.esearch(db="books", term=query, retmax=max_results, sort="relevance")
         record = Entrez.read(handle)
         handle.close()
@@ -194,6 +213,7 @@ class PubMedCollector(Collector):
         if not id_list:
             return []
 
+        self._throttle()
         handle = Entrez.esummary(db="books", id=",".join(id_list))
         summaries = Entrez.read(handle)
         handle.close()
