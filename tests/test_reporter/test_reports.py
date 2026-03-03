@@ -98,14 +98,13 @@ class TestFullReport:
         content = path.read_text()
 
         # Check key sections
-        assert "Full Treatment Compendium" in content
+        assert "EDS Pain Management Guide" in content
         assert "Low-dose naltrexone" in content
         assert "Magnesium glycinate" in content
         assert "Knee Pain" in content
         assert "Brain Fog" in content
         assert "Dr. Chopra" in content
-        assert "prolotherapy" in content.lower()
-        assert "TRENDING" in content
+        assert "Trending" in content
 
     def test_handles_empty_db(self, tmp_path):
         db = Database(tmp_path / "empty.db")
@@ -113,7 +112,7 @@ class TestFullReport:
         path = generate_full_report(db, report_dir)
         assert path.exists()
         content = path.read_text()
-        assert "Full Treatment Compendium" in content
+        assert "EDS Pain Management Guide" in content
         db.close()
 
 
@@ -126,9 +125,9 @@ class TestDeltaReport:
         assert path.exists()
         content = path.read_text()
 
-        assert "Delta Report" in content
+        assert "What's New" in content
         assert "Low-dose naltrexone" in content
-        assert "New Treatments Discovered" in content
+        assert "Newly Discovered Treatments" in content
 
     def test_empty_delta(self, populated_db, tmp_path):
         report_dir = tmp_path / "reports"
@@ -136,4 +135,4 @@ class TestDeltaReport:
         path = generate_delta_report(populated_db, report_dir, since=date.today() + timedelta(days=1))
         assert path.exists()
         content = path.read_text()
-        assert "No new treatments discovered" in content
+        assert "No new treatments discovered this period" in content

@@ -27,6 +27,8 @@ CREATE TABLE IF NOT EXISTS treatments (
     category TEXT NOT NULL,
     description TEXT DEFAULT '',
     mechanism_of_action TEXT DEFAULT '',
+    dosage TEXT DEFAULT '',
+    side_effects TEXT DEFAULT '',
     legality TEXT DEFAULT '',
     cost_estimate TEXT DEFAULT '',
     evidence_tier INTEGER DEFAULT 6,
@@ -137,7 +139,17 @@ class Database:
 
     def _init_schema(self) -> None:
         self.conn.executescript(SCHEMA_SQL)
+        self._migrate()
         self.conn.commit()
+
+    def _migrate(self) -> None:
+        """Add columns that may be missing from older databases."""
+        cursor = self.conn.execute("PRAGMA table_info(treatments)")
+        existing = {row["name"] for row in cursor.fetchall()}
+        for col in ("dosage", "side_effects"):
+            if col not in existing:
+                self.conn.execute(f"ALTER TABLE treatments ADD COLUMN {col} TEXT DEFAULT ''")
+
 
     def close(self) -> None:
         self.conn.close()
@@ -152,10 +164,12 @@ class Database:
         if existing:
             self.conn.execute(
                 """UPDATE treatments SET category=?, description=?, mechanism_of_action=?,
-                   legality=?, cost_estimate=?, evidence_tier=?, trending=?, last_updated=?
+                   dosage=?, side_effects=?, legality=?, cost_estimate=?,
+                   evidence_tier=?, trending=?, last_updated=?
                    WHERE id=?""",
                 (
                     t.category, t.description, t.mechanism_of_action,
+                    t.dosage, t.side_effects,
                     t.legality, t.cost_estimate, int(t.evidence_tier),
                     int(t.trending), _date_to_str(t.last_updated),
                     existing["id"],
@@ -165,10 +179,12 @@ class Database:
             return existing["id"]
         cursor = self.conn.execute(
             """INSERT INTO treatments (name, category, description, mechanism_of_action,
-               legality, cost_estimate, evidence_tier, trending, first_seen, last_updated)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               dosage, side_effects, legality, cost_estimate, evidence_tier, trending,
+               first_seen, last_updated)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 t.name, t.category, t.description, t.mechanism_of_action,
+                t.dosage, t.side_effects,
                 t.legality, t.cost_estimate, int(t.evidence_tier),
                 int(t.trending), _date_to_str(t.first_seen),
                 _date_to_str(t.last_updated),
@@ -227,6 +243,8 @@ class Database:
             category=TreatmentCategory(row["category"]),
             description=row["description"],
             mechanism_of_action=row["mechanism_of_action"],
+            dosage=row["dosage"] or "",
+            side_effects=row["side_effects"] or "",
             legality=row["legality"],
             cost_estimate=row["cost_estimate"],
             evidence_tier=EvidenceTier(row["evidence_tier"]),

@@ -1,99 +1,134 @@
-# EDS Pain Management — Full Treatment Compendium
+# EDS Pain Management Guide
 
-**Generated:** {{ generated_date }}
-**Total treatments tracked:** {{ treatments | length }}
-**Evidence records:** {{ total_evidence }}
+*A personalized treatment reference for discussing options with your medical team*
 
----
+**Last Updated:** {{ generated_date }}
+**Treatments Tracked:** {{ total_treatments }} | **Evidence Records:** {{ total_evidence }}
 
-## Summary
-
-{% for tier_num, tier_label in tiers %}
-### {{ tier_label }} (Tier {{ tier_num }})
-{% set tier_treatments = treatments | selectattr("evidence_tier", "equalto", tier_num) | list %}
-{% if tier_treatments %}
-{% for t in tier_treatments %}
-- **{{ t.name }}** ({{ t.category }}){% if t.trending %} 🔥 TRENDING{% endif %}
-
-{% endfor %}
-{% else %}
-_No treatments at this tier yet._
-{% endif %}
-{% endfor %}
+> **Important:** This guide is compiled from medical research, clinical trials, and community reports. It is meant to help you have informed conversations with your doctors — not to replace medical advice. Always consult your healthcare provider before starting, stopping, or changing any treatment.
 
 ---
 
-## Treatments by Symptom
+## How to Read This Guide
 
+Each treatment includes an **evidence level** that tells you how well it's been studied:
+
+| Level | What It Means |
+|-------|---------------|
+{%- for tier_num in range(1, 7) %}
+| **{{ tier_labels[tier_num] }}** | {{ tier_descriptions[tier_num] }} |
+{%- endfor %}
+
+---
+
+## Quick Reference — What Helps With What
 {% for symptom in symptoms %}
-### {{ symptom.name | replace("_", " ") | title }} ({{ symptom.body_region }}) — Priority: {{ symptom.severity_relevance | upper }}
+{%- set sym_treatments = symptom_treatments.get(symptom.name, []) %}
+{%- if sym_treatments %}
 
-{% set sym_treatments = symptom_treatments.get(symptom.name, []) %}
-{% if sym_treatments %}
-| Treatment | Category | Tier | Effectiveness | Trending |
-|-----------|----------|------|---------------|----------|
-{% for t, score in sym_treatments %}
-| {{ t.name }} | {{ t.category }} | T{{ t.evidence_tier }} | {{ "%.0f" | format(score * 100) }}% | {{ "Yes" if t.trending else "" }} |
-{% endfor %}
-{% else %}
-_No treatments linked to this symptom yet._
-{% endif %}
+### {{ symptom_display(symptom.name) }}
+{% for t, score, canon in sym_treatments %}
+- **{{ canon }}** ({{ category_labels.get(t.category, t.category) }}) — {{ effectiveness_label(score) }} — *{{ tier_labels[t.evidence_tier] }}*
+{%- endfor %}
+{%- endif %}
+{%- endfor %}
 
+---
+{% for symptom in symptoms %}
+{%- set sym_treatments = symptom_treatments.get(symptom.name, []) %}
+{%- if sym_treatments %}
+
+## {{ symptom_display(symptom.name) }}
+{% for t, score, canon in sym_treatments %}
+
+### {{ canon }}
+
+{% if t.description %}{{ t.description }}{% endif %}
+
+| | |
+|---|---|
+| **Type** | {{ category_labels.get(t.category, t.category) }} |
+| **Evidence Level** | {{ tier_labels[t.evidence_tier] }} |
+| **Reported Effectiveness** | {{ effectiveness_label(score) }} |
+{%- if has_info(t.dosage) %}
+| **Dosage / Protocol** | {{ t.dosage }} |
+{%- endif %}
+{%- if has_info(t.mechanism_of_action) %}
+| **How It Works** | {{ t.mechanism_of_action }} |
+{%- endif %}
+{%- if has_info(t.side_effects) %}
+| **Side Effects / Risks** | {{ t.side_effects }} |
+{%- endif %}
+{%- if has_info(t.cost_estimate) %}
+| **Estimated Cost** | {{ t.cost_estimate }} |
+{%- endif %}
+{%- if has_info(t.legality) %}
+| **Availability** | {{ t.legality }} |
+{%- endif %}
 {% endfor %}
 
 ---
+{%- endif %}
+{%- endfor %}
 
 ## Detailed Treatment Profiles
-
 {% for t in treatments %}
-### {{ t.name }}{% if t.trending %} 🔥{% endif %}
 
-- **Category:** {{ t.category }}
-- **Evidence Tier:** T{{ t.evidence_tier }} — {{ tier_labels[t.evidence_tier] }}
-- **First Seen:** {{ t.first_seen }}
-- **Last Updated:** {{ t.last_updated }}
-{% if t.description %}- **Description:** {{ t.description }}{% endif %}
-{% if t.mechanism_of_action %}- **Mechanism:** {{ t.mechanism_of_action }}{% endif %}
-{% if t.legality %}- **Legality:** {{ t.legality }}{% endif %}
-{% if t.cost_estimate %}- **Cost Estimate:** {{ t.cost_estimate }}{% endif %}
+### {{ t.name }}{% if t.trending %} — Trending{% endif %}
 
-{% set t_evidence = evidence_by_treatment.get(t.id, []) %}
-{% if t_evidence %}
-**Evidence ({{ t_evidence | length }} records):**
+{% if t.description %}{{ t.description }}{% endif %}
 
+| | |
+|---|---|
+| **Type** | {{ category_labels.get(t.category, t.category) }} |
+| **Evidence Level** | {{ tier_labels[t.evidence_tier] }} |
+| **First Tracked** | {{ t.first_seen }} |
+{%- if has_info(t.dosage) %}
+| **Dosage / Protocol** | {{ t.dosage }} |
+{%- endif %}
+{%- if has_info(t.mechanism_of_action) %}
+| **How It Works** | {{ t.mechanism_of_action }} |
+{%- endif %}
+{%- if has_info(t.side_effects) %}
+| **Side Effects / Risks** | {{ t.side_effects }} |
+{%- endif %}
+{%- if has_info(t.cost_estimate) %}
+| **Estimated Cost** | {{ t.cost_estimate }} |
+{%- endif %}
+{%- if has_info(t.legality) %}
+| **Availability** | {{ t.legality }} |
+{%- endif %}
+
+{% set t_evidence = evidence_by_treatment.get(t.id, []) -%}
+{% if t_evidence -%}
+**What the research says** ({{ t_evidence | length }} source{{ "s" if t_evidence | length > 1 else "" }}):
 {% for e in t_evidence %}
-- **[T{{ e.evidence_tier }}] {{ e.source_type | upper }}** ({{ e.retrieval_date }}) — {{ "✅" if e.supports_treatment == "true" else "❌" if e.supports_treatment == "false" else "⚖️" }} {{ e.supports_treatment }}
-  {{ e.summary }}
-  {% if e.source_url %}[Source]({{ e.source_url }}){% endif %}
-
-{% endfor %}
+- {{ support_label(e.supports_treatment) }} — {{ e.summary }}
+  {% if e.source_url %}*[View source]({{ e.source_url }})*{% endif %}
+{%- endfor %}
 {% endif %}
 
-{% set t_providers = providers_by_treatment.get(t.id, []) %}
-{% if t_providers %}
-**Providers:**
-{% for p in t_providers %}
+{% set t_providers = providers_by_treatment.get(t.id, []) -%}
+{% if t_providers -%}
+**Mentioned providers:**
+{% for p in t_providers -%}
 - {{ p.name }}{% if p.credentials %} ({{ p.credentials }}){% endif %}{% if p.specialty %} — {{ p.specialty }}{% endif %}{% if p.location %} — {{ p.location }}{% endif %}
-
 {% endfor %}
-{% endif %}
+{%- endif %}
+
+---
+{% endfor %}
+
+## Questions to Ask Your Doctor
+
+Based on the treatments tracked in this guide, here are some questions you might want to bring up at your next appointment:
+
+- "I've been reading about **{{ treatments[0].name if treatments else 'various treatments' }}** for EDS pain management — is this something that could work for me?"
+- "Are there any **clinical trials** for EDS treatments I might be eligible for?"
+- "What combination of treatments would you recommend for managing both my **joint pain** and **brain fog**?"
+- "What are the **risks and side effects** I should watch for with my current treatments?"
+- "Would you recommend a **multidisciplinary pain management** approach for my symptoms?"
 
 ---
 
-{% endfor %}
-
-## Pending Research Leads
-
-{% if pending_leads %}
-| Priority | Query | Target Source | Origin |
-|----------|-------|---------------|--------|
-{% for lead in pending_leads %}
-| {{ lead.priority }} | {{ lead.query_text }} | {{ lead.source_target }} | {{ lead.origin[:50] }} |
-{% endfor %}
-{% else %}
-_No pending leads._
-{% endif %}
-
----
-
-_This report is for informational purposes and discussion with medical providers. It is not medical advice._
+*This guide was automatically compiled from {{ total_evidence }} research sources including medical journals, clinical trials, and patient community reports. It is updated regularly to include the latest findings. This is not medical advice — always discuss treatment options with your healthcare team.*

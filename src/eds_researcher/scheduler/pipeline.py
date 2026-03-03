@@ -261,6 +261,8 @@ class Pipeline:
                     category=category,
                     description=t_data.get("description", ""),
                     mechanism_of_action=t_data.get("mechanism_of_action", ""),
+                    dosage=t_data.get("dosage", ""),
+                    side_effects=t_data.get("side_effects", ""),
                     legality=t_data.get("legality", ""),
                     cost_estimate=t_data.get("cost_estimate", ""),
                 )
@@ -291,6 +293,8 @@ class Pipeline:
                     category=category,
                     description=t_data.get("description", ""),
                     mechanism_of_action=t_data.get("mechanism_of_action", ""),
+                    dosage=t_data.get("dosage", ""),
+                    side_effects=t_data.get("side_effects", ""),
                     legality=t_data.get("legality", ""),
                     cost_estimate=t_data.get("cost_estimate", ""),
                     evidence_tier=agg_tier,

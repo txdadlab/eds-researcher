@@ -29,15 +29,16 @@ Return a JSON object with:
 {{
   "treatments": [
     {{
-      "name": "treatment name",
+      "name": "treatment name (use the standard/generic name, e.g. 'Physical Therapy' not 'PT' or 'Physiotherapy')",
       "category": "medication|supplement|exercise|therapy|other",
-      "description": "brief description",
-      "mechanism_of_action": "how it works if mentioned",
-      "legality": "legal status if mentioned",
-      "cost_estimate": "cost info if mentioned",
-      "side_effects": "any mentioned side effects",
+      "description": "brief patient-friendly description of what this treatment is and how it helps",
+      "mechanism_of_action": "how it works, explained simply",
+      "dosage": "specific dosage, frequency, or protocol if mentioned (e.g. '300mg twice daily', '3x/week 30min sessions')",
+      "side_effects": "any mentioned side effects, risks, or warnings",
+      "legality": "legal status if mentioned (e.g. 'prescription required', 'OTC', 'legal supplement')",
+      "cost_estimate": "cost info if mentioned (e.g. '$30/month', 'covered by most insurance')",
       "relevant_symptoms": ["which symptoms this targets: knee_pain, hip_pain, shoulder_pain, neuropathy, muscle_pain, brain_fog"],
-      "effectiveness_notes": "what the source says about effectiveness"
+      "effectiveness_notes": "what the source says about effectiveness in plain language"
     }}
   ],
   "providers": [
@@ -54,6 +55,11 @@ Return a JSON object with:
   "relevance_score": 0.0-1.0
 }}
 
+IMPORTANT:
+- Only extract actual medical treatments, medications, supplements, therapies, or exercises.
+- Do NOT extract general life activities (food, water, travel tips, etc.) as treatments.
+- Use standard treatment names consistently (e.g. always "Physical Therapy" not variants like "PT", "Physiotherapy").
+- Include dosage information whenever the source mentions specific amounts, frequencies, or protocols.
 If no treatments are found, return empty arrays. Always include evidence_summary."""
 
 

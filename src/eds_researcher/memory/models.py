@@ -56,6 +56,8 @@ class Treatment:
     category: TreatmentCategory
     description: str = ""
     mechanism_of_action: str = ""
+    dosage: str = ""
+    side_effects: str = ""
     legality: str = ""
     cost_estimate: str = ""
     evidence_tier: EvidenceTier = EvidenceTier.THEORETICAL_LEAD

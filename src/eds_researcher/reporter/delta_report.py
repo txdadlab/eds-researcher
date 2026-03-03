@@ -9,17 +9,18 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
 from eds_researcher.memory.database import Database
+from eds_researcher.reporter.full_report import (
+    TIER_LABELS,
+    CATEGORY_LABELS,
+    _canonical_name,
+    _effectiveness_label,
+    _has_info,
+    _is_noise,
+    _support_label,
+    _symptom_display,
+)
 
 logger = logging.getLogger(__name__)
-
-TIER_LABELS = {
-    1: "Peer-Reviewed",
-    2: "Clinical/Emerging",
-    3: "Professional Opinion",
-    4: "Anecdotal — Multiple",
-    5: "Anecdotal — Single",
-    6: "Theoretical/Lead",
-}
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
@@ -40,6 +41,10 @@ def generate_delta_report(
 
     # Get treatments that are new or updated since last run
     changed_treatments = db.get_treatments_since(since)
+
+    # Filter noise
+    changed_treatments = [t for t in changed_treatments if not _is_noise(t.name)]
+
     new_treatments = [t for t in changed_treatments if t.first_seen >= since]
     updated_treatments = [t for t in changed_treatments if t.first_seen < since and t.last_updated >= since]
 
@@ -90,6 +95,10 @@ def generate_delta_report(
         new_leads=new_leads,
         search_stats=search_stats,
         tier_labels=TIER_LABELS,
+        category_labels=CATEGORY_LABELS,
+        support_label=_support_label,
+        canonical_name=_canonical_name,
+        has_info=_has_info,
     )
 
     output_path = output_dir / f"delta_report_{date.today().isoformat()}.md"
