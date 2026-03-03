@@ -87,10 +87,10 @@ class Pipeline:
 
         if sources.get("reddit", {}).get("enabled", True):
             reddit_cfg = sources["reddit"]
-            # Use PRAW if API credentials exist, otherwise fall back to public JSON API
-            has_reddit_key = bool(
-                os.getenv("REDDIT_CLIENT_ID") or reddit_cfg.get("client_id")
-            )
+            # Use PRAW if real API credentials exist, otherwise fall back to public JSON API
+            _PLACEHOLDERS = {"", "your_reddit_client_id", "your-client-id", None}
+            raw_id = os.getenv("REDDIT_CLIENT_ID", "") or reddit_cfg.get("client_id", "")
+            has_reddit_key = raw_id not in _PLACEHOLDERS and not raw_id.startswith("your")
             if has_reddit_key:
                 collectors["reddit"] = RedditCollector(
                     subreddits=reddit_cfg.get("subreddits"),

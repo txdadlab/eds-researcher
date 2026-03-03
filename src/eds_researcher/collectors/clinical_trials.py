@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from datetime import date
 
 import requests
@@ -15,25 +16,61 @@ logger = logging.getLogger(__name__)
 
 API_BASE = "https://clinicaltrials.gov/api/v2/studies"
 
+# Filler words to strip from queries — ClinicalTrials.gov searches best with
+# medical keywords, not natural language sentences.
+_STOPWORDS = frozenset(
+    "a an the of in on for and or with to by from is are was were be been being "
+    "that this these those it its into as at which how what where when who whom "
+    "using including particularly especially specifically co-occurring concurrent "
+    "approaches techniques outcomes impact effects role potential latest recent "
+    "new novel current emerging innovative comprehensive multimodal tailored "
+    "targeted diagnosed patients individuals subjects people adolescents pediatric "
+    "young adults children teenagers monitoring alleviating managing addressing "
+    "disorders conditions associated related based".split()
+)
+
+
+def _sanitize_query(raw: str) -> str:
+    """Convert a natural-language query into effective API keywords.
+
+    Strips stopwords and filler, keeps medical terms, caps at 8 keywords.
+    """
+    # Remove parenthetical content and special chars except hyphens
+    cleaned = re.sub(r"\([^)]*\)", " ", raw)
+    cleaned = re.sub(r"[^\w\s-]", " ", cleaned)
+
+    keywords = []
+    for word in cleaned.split():
+        if word.lower() not in _STOPWORDS and len(word) > 1:
+            keywords.append(word)
+        if len(keywords) >= 8:
+            break
+
+    return " ".join(keywords) if keywords else raw.split()[0]
+
 
 class ClinicalTrialsCollector(Collector):
     source_type = "clinical_trials"
 
     def search(self, query: str, max_results: int = 15) -> list[RawFinding]:
+        clean_query = _sanitize_query(query)
+        logger.debug(f"ClinicalTrials query: '{query[:60]}' → '{clean_query}'")
+
         params = {
-            "query.term": query,
+            "query.term": clean_query,
             "pageSize": min(max_results, 100),
             "format": "json",
-            "fields": (
-                "NCTId,BriefTitle,OfficialTitle,BriefSummary,"
-                "OverallStatus,StartDate,CompletionDate,Phase,"
-                "Condition,InterventionName,InterventionType,"
-                "LocationFacility,LocationCity,LocationState,LocationCountry,"
-                "ContactName,ContactEMail"
-            ),
         }
 
         resp = requests.get(API_BASE, params=params, timeout=30)
+        if resp.status_code == 400:
+            # Last resort: try just the first 3 words
+            fallback = " ".join(clean_query.split()[:3])
+            logger.warning(
+                f"ClinicalTrials.gov 400 for '{clean_query}', retrying with '{fallback}'"
+            )
+            params["query.term"] = fallback
+            resp = requests.get(API_BASE, params=params, timeout=30)
         resp.raise_for_status()
         data = resp.json()
 
