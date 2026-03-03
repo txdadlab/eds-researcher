@@ -2,7 +2,7 @@
 name = "eds-researcher"
 version = "0.1.0"
 description = "Agentic AI research tool for EDS pain management treatments"
-readme = {text = "", content-type = "text/markdown"}
+readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "openai>=1.0",
